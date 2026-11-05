@@ -27,6 +27,7 @@ import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import java.util.concurrent.TimeUnit
+import com.google.firebase.auth.EmailAuthProvider
 
 class AuthManager(private val auth: FirebaseAuth = Firebase.auth) {
 
@@ -68,7 +69,7 @@ class AuthManager(private val auth: FirebaseAuth = Firebase.auth) {
         val authResult = auth.signInAnonymously().await()
         authResult.user ?: throw IllegalStateException("Đăng nhập ẩn danh thất bại")
     }
-    // ===== Email / Mật khẩu =====
+
     suspend fun signInWithEmail(email: String, password: String): Result<FirebaseUser> = safeCall {
         auth.signInWithEmailAndPassword(email.trim(), password).await().user!!
     }
@@ -77,11 +78,18 @@ class AuthManager(private val auth: FirebaseAuth = Firebase.auth) {
         auth.createUserWithEmailAndPassword(email.trim(), password).await().user!!
     }
 
-    // ===== Facebook =====
+    suspend fun linkWithEmail(email: String, password: String): Result<FirebaseUser> = safeCall {
+        val user = auth.currentUser ?: throw IllegalStateException("Bạn chưa đăng nhập")
+        val credential = EmailAuthProvider.getCredential(email.trim(), password)
+        user.linkWithCredential(credential).await().user!!
+    }
+
+
     suspend fun signInWithFacebookToken(token: String): Result<FirebaseUser> =
         signInWithCredential(FacebookAuthProvider.getCredential(token))
 
-    // ===== Số điện thoại =====
+
+
     private fun toE164(phone: String): String {
         val p = phone.trim().replace(" ", "")
         return if (p.startsWith("+")) p else "+84" + p.removePrefix("0")

@@ -53,6 +53,7 @@ fun HomeScreen(
     onProfileClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val shownName = userName.ifBlank { "bạn" }
     val todos by viewModel.todos.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
@@ -148,21 +149,23 @@ fun HomeScreen(
         }
     }
 
+    // ===== Thêm việc =====
     if (showAdd) {
         AddTodoDialog(
             onDismiss = { showAdd = false },
-            onSave = { title, category, time ->
-                viewModel.addTodo(title, category, time, LocalDate.now().toString())
+            onSave = { title, category, time, date ->
+                viewModel.addTodo(title, category, time, date)
                 showAdd = false
             }
         )
     }
 
+    // ===== Sửa / Xoá việc =====
     editing?.let { todo ->
         AddTodoDialog(
             initial = todo,
             onDismiss = { editing = null },
-            onSave = { title, category, time ->
+            onSave = { title, category, time, _ ->
                 viewModel.updateTodo(todo, title, category, time)
                 editing = null
             },

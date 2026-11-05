@@ -9,8 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +37,10 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val user = authManager.currentUser
+    var showConfirm by remember { mutableStateOf(false) }
+    var showLink by remember { mutableStateOf(false) }
+    var version by remember { mutableIntStateOf(0) }
+    val user = remember(version) { authManager.currentUser }
 
     val isAnonymous = user?.isAnonymous == true
     val isGoogle = user?.providerData?.any { it.providerId == "google.com" } == true
@@ -62,7 +64,7 @@ fun ProfileScreen(
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Thanh trên: < Cài đặt     Hồ sơ
+
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Row(
                 modifier = Modifier.align(Alignment.CenterStart).clickable { onBack() },
@@ -108,18 +110,22 @@ fun ProfileScreen(
         WeekChart(todos)
 
         Spacer(Modifier.weight(1f))
+        if (isAnonymous) {
+            Spacer(Modifier.height(14.dp))
+            OutlinedButton(
+                onClick = { showLink = true },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) { Text("Liên kết tài khoản để giữ dữ liệu", color = Blue) }
+        }
+
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color.White)
-                .clickable {
-                    scope.launch {
-                        authManager.signOut(context)
-                        onLoggedOut()
-                    }
-                }
+                .clickable { showConfirm = true }
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
@@ -128,6 +134,39 @@ fun ProfileScreen(
             Spacer(Modifier.width(8.dp))
             Text("Đăng xuất", color = Blue, fontWeight = FontWeight.Medium, fontSize = 14.sp)
         }
+    }
+
+
+    if (showConfirm) {
+        AlertDialog(
+            onDismissRequest = { showConfirm = false },
+            title = { Text("Đăng xuất", fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    if (isAnonymous)
+                        "Đây là tài khoản dùng thử. Đăng xuất sẽ MẤT toàn bộ công việc. Hãy liên kết tài khoản trước nếu muốn giữ lại."
+                    else
+                        "Bạn có chắc muốn đăng xuất khỏi tài khoản này không?"
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirm = false
+                    scope.launch {
+                        authManager.signOut(context)
+                        onLoggedOut()
+                    }
+                }) { Text("Đăng xuất", color = Color(0xFFE5484D)) }
+            },
+            dismissButton = { TextButton(onClick = { showConfirm = false }) { Text("Huỷ") } }
+        )
+    }
+    if (showLink) {
+        LinkAccountDialog(
+            authManager = authManager,
+            onDismiss = { showLink = false },
+            onLinked = { showLink = false; version++ }
+        )
     }
 }
 
@@ -141,7 +180,7 @@ private fun StatCard(value: String, label: String, modifier: Modifier = Modifier
     }
 }
 
-/** Biểu đồ cột "Tuần này": đếm việc đã xong theo trường date (yyyy-MM-dd) của từng việc. */
+
 @Composable
 private fun WeekChart(todos: List<Todo>) {
     val labels = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
@@ -196,7 +235,7 @@ private fun WeekChart(todos: List<Todo>) {
     }
 }
 
-/** Avatar tròn hiện chữ cái đầu của tên (vd "Minh Anh" -> "MA"). */
+
 @Composable
 fun Avatar(name: String, size: Int, modifier: Modifier = Modifier) {
     val initials = name.trim().split(" ").filter { it.isNotEmpty() }

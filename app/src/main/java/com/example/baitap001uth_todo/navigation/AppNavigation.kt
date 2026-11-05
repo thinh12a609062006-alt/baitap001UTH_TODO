@@ -1,6 +1,7 @@
 package com.example.baitap001uth_todo.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +36,13 @@ fun AppNavigation() {
         version = "Phiên bản 1.0"
     )
 
+    // Đưa về màn đăng nhập và xoá hết các màn trước (không Back lại được)
+    val goToLogin = {
+        navController.navigate(Routes.LOGIN) {
+            popUpTo(navController.graph.id) { inclusive = true }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Routes.SPLASH
@@ -60,7 +68,7 @@ fun AppNavigation() {
             val page = repository.getPage(pageId - 1)
             val total = repository.getTotalPages()
 
-            // Xong Onboarding -> Đăng nhập (hoặc Home nếu đã đăng nhập sẵn)
+            // Xong Onboarding: đã đăng nhập -> Home, chưa -> Đăng nhập
             val goNext = {
                 val target = if (authManager.currentUser != null) Routes.HOME else Routes.LOGIN
                 navController.navigate(target) {
@@ -117,13 +125,19 @@ fun AppNavigation() {
             )
         }
 
-        // ===== Trang chủ =====
+        // ===== Trang chủ (YÊU CẦU ĐĂNG NHẬP) =====
         composable(Routes.HOME) {
-            val homeViewModel: HomeViewModel = viewModel()
             val user = authManager.currentUser
-            val name = user?.displayName?.takeIf { it.isNotBlank() }
-                ?: user?.email?.substringBefore("@")
-                ?: "bạn"
+            if (user == null) {
+                // Chưa đăng nhập -> không cho vào, đẩy về màn đăng nhập
+                LaunchedEffect(Unit) { goToLogin() }
+                return@composable
+            }
+
+            val homeViewModel: HomeViewModel = viewModel()
+            val name = user.displayName?.takeIf { it.isNotBlank() }
+                ?: user.email?.substringBefore("@")
+                ?: ""
 
             HomeScreen(
                 viewModel = homeViewModel,
@@ -132,8 +146,13 @@ fun AppNavigation() {
             )
         }
 
-        // ===== Hồ sơ =====
+        // ===== Hồ sơ (YÊU CẦU ĐĂNG NHẬP) =====
         composable(Routes.PROFILE) {
+            if (authManager.currentUser == null) {
+                LaunchedEffect(Unit) { goToLogin() }
+                return@composable
+            }
+
             val homeViewModel: HomeViewModel = viewModel()
             val todos by homeViewModel.todos.collectAsStateWithLifecycle()
 
@@ -141,11 +160,7 @@ fun AppNavigation() {
                 authManager = authManager,
                 todos = todos,
                 onBack = { navController.popBackStack() },
-                onLoggedOut = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                    }
-                }
+                onLoggedOut = { goToLogin() }
             )
         }
     }
