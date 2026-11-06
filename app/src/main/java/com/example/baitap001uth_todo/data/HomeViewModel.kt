@@ -2,54 +2,51 @@ package com.example.baitap001uth_todo.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.baitap001uth_todo.model.Todo
-import com.example.baitap001uth_todo.repository.TodoRepository
-import kotlinx.coroutines.CancellationException
+import com.example.baitap001uth_todo.model.Task
+import com.example.baitap001uth_todo.repository.TaskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
+data class HomeUiState(
+    val isLoading: Boolean = true,
+    val tasks: List<Task> = emptyList(),
+    val error: String? = null
+)
+
 class HomeViewModel(
-    private val repository: TodoRepository = TodoRepository()
+    private val repository: TaskRepository = TaskRepository()
 ) : ViewModel() {
 
-    // Danh sách realtime từ Firestore (của user đang đăng nhập)
-    val todos: StateFlow<List<Todo>> = repository.getTodosFlow()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val _state = MutableStateFlow(HomeUiState())
+    val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
-    // Thông báo lỗi để UI hiện Toast
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
-    fun clearError() { _error.value = null }
+    init {
+        loadTasks()
+    }
 
-    private fun launchSafe(block: suspend () -> Unit) {
+
+    fun loadTasks() {
         viewModelScope.launch {
-            try {
-                block()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                _error.value = "Lỗi: ${e.localizedMessage ?: "không xác định"}"
-            }
+            _state.update { it.copy(isLoading = true, error = null) }
+            repository.getTasks()
+                .onSuccess { list ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            tasks = list.sortedWith(compareBy({ t -> t.date }, { t -> t.time })),
+                            error = null
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _state.update {
+                        it.copy(isLoading = false, error = e.message ?: "Không tải được dữ liệu")
+                    }
+                }
         }
-    }
-
-    fun toggle(todo: Todo) = launchSafe {
-        repository.setCompleted(todo.id, !todo.isCompleted)
-    }
-
-    fun addTodo(title: String, category: String, time: String, date: String) = launchSafe {
-        repository.addTodo(Todo(title = title, category = category, time = time, date = date))
-    }
-
-    fun updateTodo(todo: Todo, title: String, category: String, time: String) = launchSafe {
-        repository.updateTodo(todo.id, title, category, time)
-    }
-
-    fun deleteTodo(todo: Todo) = launchSafe {
-        repository.deleteTodo(todo.id)
     }
 }

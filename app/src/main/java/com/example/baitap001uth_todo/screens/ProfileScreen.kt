@@ -20,7 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.baitap001uth_todo.data.AuthManager
-import com.example.baitap001uth_todo.model.Todo
+import com.example.baitap001uth_todo.model.Task
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -31,7 +31,7 @@ private val Ink = Color(0xFF1B1F3B)
 @Composable
 fun ProfileScreen(
     authManager: AuthManager,
-    todos: List<Todo>,
+    tasks: List<Task>,
     onBack: () -> Unit,
     onLoggedOut: () -> Unit
 ) {
@@ -52,8 +52,8 @@ fun ProfileScreen(
         ?: user?.phoneNumber?.takeIf { it.isNotBlank() }
         ?: "Chưa có email"
 
-    val total = todos.size
-    val done = todos.count { it.isCompleted }
+    val total = tasks.size
+    val done = tasks.count { it.done }
     val percent = if (total == 0) 0 else done * 100 / total
 
     Column(
@@ -107,7 +107,7 @@ fun ProfileScreen(
         }
 
         Spacer(Modifier.height(14.dp))
-        WeekChart(todos)
+        WeekChart(tasks)
 
         Spacer(Modifier.weight(1f))
         if (isAnonymous) {
@@ -182,13 +182,13 @@ private fun StatCard(value: String, label: String, modifier: Modifier = Modifier
 
 
 @Composable
-private fun WeekChart(todos: List<Todo>) {
+private fun WeekChart(tasks: List<Task>) {
     val labels = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
     val today = LocalDate.now()
     val monday = today.with(DayOfWeek.MONDAY)
     val values = List(7) { i ->
         val day = monday.plusDays(i.toLong()).toString()
-        todos.count { it.isCompleted && it.date == day }
+        tasks.count { it.done && it.date == day }
     }
     val todayIndex = today.dayOfWeek.value - 1
     val maxValue = maxOf(values.max(), 1)

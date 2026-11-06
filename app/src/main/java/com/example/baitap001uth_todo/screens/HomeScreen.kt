@@ -1,6 +1,5 @@
 package com.example.baitap001uth_todo.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +18,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,13 +29,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.baitap001uth_todo.model.Todo
+import com.example.baitap001uth_todo.model.Task
 import com.example.baitap001uth_todo.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -52,23 +52,13 @@ fun HomeScreen(
     userName: String,
     onProfileClick: () -> Unit
 ) {
-    val context = LocalContext.current
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val tasks = state.tasks
     val shownName = userName.ifBlank { "bạn" }
-    val todos by viewModel.todos.collectAsStateWithLifecycle()
-    val error by viewModel.error.collectAsStateWithLifecycle()
 
-    var showAdd by remember { mutableStateOf(false) }
-    var editing by remember { mutableStateOf<Todo?>(null) }
-
-    LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-            viewModel.clearError()
-        }
-    }
-
-    val done = todos.count { it.isCompleted }
-    val total = todos.size
+    // Thống kê tính từ dữ liệu API
+    val total = tasks.size
+    val done = tasks.count { it.done }
     val percent = if (total == 0) 0 else done * 100 / total
 
     val today = LocalDate.now()
@@ -77,7 +67,7 @@ fun HomeScreen(
 
     Scaffold(
         containerColor = Color.White,
-        bottomBar = { HomeBottomBar(onAddClick = { showAdd = true }) }
+        bottomBar = { HomeBottomBar(onAddClick = { /* Bước 8 sẽ nối vào đây */ }) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -87,6 +77,7 @@ fun HomeScreen(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // ===== Header =====
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
@@ -95,13 +86,13 @@ fun HomeScreen(
                             .clickable { onProfileClick() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(userName.take(1).uppercase(), color = Color.White,
+                        Text(shownName.take(1).uppercase(), color = Color.White,
                             fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(dateText, fontSize = 12.sp, color = Color.Gray)
-                        Text("Chào $userName!", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Ink)
+                        Text("Chào $shownName!", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Ink)
                     }
                     Box(
                         modifier = Modifier.size(40.dp).clip(CircleShape).background(Soft),
@@ -111,23 +102,26 @@ fun HomeScreen(
                 Spacer(Modifier.height(8.dp))
             }
 
+            // ===== Thẻ tiến độ =====
             item { ProgressCard(done, total, percent) }
 
+            // ===== 2 thẻ danh mục =====
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CategoryCard(
                         icon = Icons.Default.School, title = "Học tập",
-                        remaining = todos.count { it.category == "Học tập" && !it.isCompleted },
+                        remaining = tasks.count { it.category == "study" && !it.done },
                         modifier = Modifier.weight(1f)
                     )
                     CategoryCard(
                         icon = Icons.Default.Home, title = "Cuộc sống",
-                        remaining = todos.count { it.category == "Cuộc sống" && !it.isCompleted },
+                        remaining = tasks.count { it.category == "life" && !it.done },
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
+            // ===== Tiêu đề danh sách =====
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -139,41 +133,45 @@ fun HomeScreen(
                 }
             }
 
-            items(todos, key = { it.id }) { todo ->
-                TodoItem(
-                    todo = todo,
-                    onToggle = { viewModel.toggle(todo) },
-                    onClick = { editing = todo }
-                )
+            // ===== 4 trạng thái: Loading / Lỗi / Trống / Có dữ liệu =====
+            when {
+                state.isLoading -> item {
+                    Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Blue)
+                    }
+                }
+                state.error != null -> item {
+                    ErrorBox(message = state.error!!, onRetry = { viewModel.loadTasks() })
+                }
+                tasks.isEmpty() -> item {
+                    Text(
+                        "Chưa có công việc nào. Bấm nút + để thêm việc đầu tiên!",
+                        color = Color.Gray, fontSize = 14.sp, textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(32.dp)
+                    )
+                }
+                else -> items(tasks, key = { it.id }) { task -> TaskItem(task) }
             }
         }
     }
+}
 
-    // ===== Thêm việc =====
-    if (showAdd) {
-        AddTodoDialog(
-            onDismiss = { showAdd = false },
-            onSave = { title, category, time, date ->
-                viewModel.addTodo(title, category, time, date)
-                showAdd = false
-            }
-        )
-    }
-
-    // ===== Sửa / Xoá việc =====
-    editing?.let { todo ->
-        AddTodoDialog(
-            initial = todo,
-            onDismiss = { editing = null },
-            onSave = { title, category, time, _ ->
-                viewModel.updateTodo(todo, title, category, time)
-                editing = null
-            },
-            onDelete = {
-                viewModel.deleteTodo(todo)
-                editing = null
-            }
-        )
+@Composable
+private fun ErrorBox(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFFFDECEC))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(message, color = Color(0xFFB42318), fontSize = 14.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(10.dp))
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(containerColor = Blue)
+        ) { Text("Thử lại") }
     }
 }
 
@@ -229,46 +227,45 @@ private fun CategoryCard(icon: ImageVector, title: String, remaining: Int, modif
 }
 
 @Composable
-private fun TodoItem(todo: Todo, onToggle: () -> Unit, onClick: () -> Unit) {
+private fun TaskItem(task: Task) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(Soft)
-            .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Đã xong: vòng tròn xanh có dấu tích. Chưa xong: vòng tròn trắng
         Box(
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(if (todo.isCompleted) Blue else Color.White)
-                .clickable { onToggle() },
+                .background(if (task.done) Blue else Color.White),
             contentAlignment = Alignment.Center
         ) {
-            if (todo.isCompleted) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(14.dp))
+            if (task.done) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(14.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                todo.title, fontSize = 15.sp, fontWeight = FontWeight.Medium,
-                color = if (todo.isCompleted) Color.Gray else Ink,
-                textDecoration = if (todo.isCompleted) TextDecoration.LineThrough else null
+                task.title, fontSize = 15.sp, fontWeight = FontWeight.Medium,
+                color = if (task.done) Color.Gray else Ink,
+                textDecoration = if (task.done) TextDecoration.LineThrough else null
             )
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val chipColor = if (todo.category == "Học tập") Blue else Orange
+                val chipColor = if (task.category == "life") Orange else Blue
                 Text(
-                    todo.category, fontSize = 11.sp, color = chipColor, fontWeight = FontWeight.Medium,
+                    task.categoryLabel, fontSize = 11.sp, color = chipColor, fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
                         .background(chipColor.copy(alpha = 0.12f))
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 )
-                if (todo.time.isNotBlank()) {
+                if (task.time.isNotBlank()) {
                     Spacer(Modifier.width(8.dp))
-                    Text(todo.time, fontSize = 11.sp, color = Color.Gray)
+                    Text(task.time, fontSize = 11.sp, color = Color.Gray)
                 }
             }
         }

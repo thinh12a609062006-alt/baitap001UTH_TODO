@@ -29,6 +29,7 @@ fun AppNavigation() {
 
     val authManager = remember { AuthManager() }
     val repository = remember { OnboardingRepository() }
+    val homeViewModel: HomeViewModel = viewModel()
 
     val appInfo = AppInfo(
         name = "UTH Todo",
@@ -154,11 +155,12 @@ fun AppNavigation() {
             }
 
             val homeViewModel: HomeViewModel = viewModel()
-            val todos by homeViewModel.todos.collectAsStateWithLifecycle()
+            val todos by homeViewModel.state.collectAsStateWithLifecycle()
+
 
             ProfileScreen(
                 authManager = authManager,
-                todos = todos,
+                tasks = todos.tasks,
                 onBack = { navController.popBackStack() },
                 onLoggedOut = { goToLogin() }
             )
