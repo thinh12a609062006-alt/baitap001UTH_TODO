@@ -108,6 +108,7 @@ fun HomeScreen(
             }
 
             item { ProgressCard(done, total, percent) }
+            item { StatsRow(total = total, done = done, pending = total - done, percent = percent) }
 
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -323,5 +324,31 @@ private fun HomeBottomBar(onAddClick: () -> Unit) {
             selected = false, onClick = {},
             icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Cài đặt", fontSize = 10.sp) }
         )
+    }
+}
+@Composable
+private fun StatsRow(total: Int, done: Int, pending: Int, percent: Int) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        StatBox("Tổng cộng", "$total", Modifier.weight(1f))
+        StatBox("Đã xong", "$done", Modifier.weight(1f))
+        StatBox("Đang chờ", "$pending", Modifier.weight(1f))
+        StatBox("Tiến độ", "$percent%", Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun StatBox(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(Soft)
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(value, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink)
+        Text(label, fontSize = 11.sp, color = Color.Gray)
     }
 }
