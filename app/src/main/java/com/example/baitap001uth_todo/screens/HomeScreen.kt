@@ -40,6 +40,11 @@ import com.example.baitap001uth_todo.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 
 private val Blue = Color(0xFF2F5BEA)
 private val Orange = Color(0xFFF59E0B)
@@ -55,8 +60,9 @@ fun HomeScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks = state.tasks
     val shownName = userName.ifBlank { "bạn" }
+    val context = LocalContext.current
+    var showAdd by remember { mutableStateOf(false) }
 
-    // Thống kê tính từ dữ liệu API
     val total = tasks.size
     val done = tasks.count { it.done }
     val percent = if (total == 0) 0 else done * 100 / total
@@ -67,7 +73,7 @@ fun HomeScreen(
 
     Scaffold(
         containerColor = Color.White,
-        bottomBar = { HomeBottomBar(onAddClick = { /* Bước 8 sẽ nối vào đây */ }) }
+        bottomBar = { HomeBottomBar(onAddClick = { showAdd = true })  }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -77,7 +83,6 @@ fun HomeScreen(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // ===== Header =====
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
@@ -102,10 +107,8 @@ fun HomeScreen(
                 Spacer(Modifier.height(8.dp))
             }
 
-            // ===== Thẻ tiến độ =====
             item { ProgressCard(done, total, percent) }
 
-            // ===== 2 thẻ danh mục =====
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CategoryCard(
@@ -121,7 +124,6 @@ fun HomeScreen(
                 }
             }
 
-            // ===== Tiêu đề danh sách =====
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -133,7 +135,6 @@ fun HomeScreen(
                 }
             }
 
-            // ===== 4 trạng thái: Loading / Lỗi / Trống / Có dữ liệu =====
             when {
                 state.isLoading -> item {
                     Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -153,6 +154,24 @@ fun HomeScreen(
                 else -> items(tasks, key = { it.id }) { task -> TaskItem(task) }
             }
         }
+    }
+    if (showAdd) {
+        AddTaskDialog(
+            isSaving = state.isSaving,
+            onDismiss = { showAdd = false },
+            onSave = { request ->
+                viewModel.addTask(request) { result ->
+                    result
+                        .onSuccess {
+                            Toast.makeText(context, "Thêm công việc thành công!", Toast.LENGTH_SHORT).show()
+                            showAdd = false
+                        }
+                        .onFailure {
+                            Toast.makeText(context, "Thêm thất bại: ${it.message}", Toast.LENGTH_LONG).show()
+                        }
+                }
+            }
+        )
     }
 }
 
