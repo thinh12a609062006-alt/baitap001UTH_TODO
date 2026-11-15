@@ -9,15 +9,25 @@ import retrofit2.HttpException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-
 class TaskRepository(private val api: TaskApi = ApiClient.taskApi) {
 
     suspend fun getTasks(): Result<List<Task>> = call { api.getTasks() }
+
+    suspend fun getTask(id: String): Result<Task> = call { api.getTask(id) }
 
     suspend fun createTask(request: TaskRequest): Result<Task> = call { api.createTask(request) }
 
     suspend fun updateTask(id: String, request: TaskRequest): Result<Task> =
         call { api.updateTask(id, request) }
+
+
+    suspend fun patchTask(id: String, request: TaskRequest): Result<Task> = call {
+        try {
+            api.patchTask(id, request)
+        } catch (e: HttpException) {
+            if (e.code() in listOf(404, 405, 501)) api.updateTask(id, request) else throw e
+        }
+    }
 
     suspend fun deleteTask(id: String): Result<Unit> = call { api.deleteTask(id) }
 

@@ -16,12 +16,17 @@ import com.example.baitap001uth_todo.data.OnboardingRepository
 import com.example.baitap001uth_todo.model.AppInfo
 import com.example.baitap001uth_todo.screens.EmailLoginScreen
 import com.example.baitap001uth_todo.screens.HomeScreen
+import com.example.baitap001uth_todo.screens.ListScreen
 import com.example.baitap001uth_todo.screens.LoginScreen
 import com.example.baitap001uth_todo.screens.OnboardingScreen
 import com.example.baitap001uth_todo.screens.PhoneLoginScreen
 import com.example.baitap001uth_todo.screens.ProfileScreen
 import com.example.baitap001uth_todo.screens.SplashScreen
 import com.example.baitap001uth_todo.viewmodel.HomeViewModel
+import com.example.baitap001uth_todo.screens.DetailScreen
+import com.example.baitap001uth_todo.screens.NotificationScreen
+import com.example.baitap001uth_todo.screens.ReminderSettingsScreen
+import com.example.baitap001uth_todo.viewmodel.NotificationViewModel
 
 @Composable
 fun AppNavigation() {
@@ -29,7 +34,9 @@ fun AppNavigation() {
 
     val authManager = remember { AuthManager() }
     val repository = remember { OnboardingRepository() }
+
     val homeViewModel: HomeViewModel = viewModel()
+    val notificationViewModel: NotificationViewModel = viewModel()
 
     val appInfo = AppInfo(
         name = "UTH Todo",
@@ -37,10 +44,16 @@ fun AppNavigation() {
         version = "Phiên bản 1.0"
     )
 
-    // Đưa về màn đăng nhập và xoá hết các màn trước (không Back lại được)
     val goToLogin = {
         navController.navigate(Routes.LOGIN) {
             popUpTo(navController.graph.id) { inclusive = true }
+        }
+    }
+
+    val goTab: (String) -> Unit = { route ->
+        navController.navigate(route) {
+            popUpTo(Routes.HOME) { inclusive = false }
+            launchSingleTop = true
         }
     }
 
@@ -48,7 +61,6 @@ fun AppNavigation() {
         navController = navController,
         startDestination = Routes.SPLASH
     ) {
-        // ===== Splash =====
         composable(Routes.SPLASH) {
             SplashScreen(
                 appInfo = appInfo,
@@ -60,7 +72,6 @@ fun AppNavigation() {
             )
         }
 
-        // ===== Onboarding =====
         composable(
             route = Routes.ONBOARDING,
             arguments = listOf(navArgument("pageId") { type = NavType.IntType })
@@ -69,7 +80,6 @@ fun AppNavigation() {
             val page = repository.getPage(pageId - 1)
             val total = repository.getTotalPages()
 
-            // Xong Onboarding: đã đăng nhập -> Home, chưa -> Đăng nhập
             val goNext = {
                 val target = if (authManager.currentUser != null) Routes.HOME else Routes.LOGIN
                 navController.navigate(target) {
@@ -88,7 +98,6 @@ fun AppNavigation() {
             )
         }
 
-        // ===== Đăng nhập =====
         composable(Routes.LOGIN) {
             LoginScreen(
                 authManager = authManager,
@@ -126,16 +135,12 @@ fun AppNavigation() {
             )
         }
 
-        // ===== Trang chủ (YÊU CẦU ĐĂNG NHẬP) =====
         composable(Routes.HOME) {
             val user = authManager.currentUser
             if (user == null) {
-                // Chưa đăng nhập -> không cho vào, đẩy về màn đăng nhập
                 LaunchedEffect(Unit) { goToLogin() }
                 return@composable
             }
-
-            val homeViewModel: HomeViewModel = viewModel()
             val name = user.displayName?.takeIf { it.isNotBlank() }
                 ?: user.email?.substringBefore("@")
                 ?: ""
@@ -143,24 +148,66 @@ fun AppNavigation() {
             HomeScreen(
                 viewModel = homeViewModel,
                 userName = name,
-                onProfileClick = { navController.navigate(Routes.PROFILE) }
+                onProfileClick = { navController.navigate(Routes.PROFILE) },
+                onListClick = { goTab(Routes.LIST) },
+                onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
+                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) }
             )
         }
 
-        // ===== Hồ sơ (YÊU CẦU ĐĂNG NHẬP) =====
+        composable(Routes.LIST) {
+            if (authManager.currentUser == null) {
+                LaunchedEffect(Unit) { goToLogin() }
+                return@composable
+            }
+            ListScreen(
+                viewModel = homeViewModel,
+                onHomeClick = { goTab(Routes.HOME) },
+                onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
+                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) }
+            )
+        }
+        composable(Routes.NOTIFICATIONS) {
+            if (authManager.currentUser == null) {
+                LaunchedEffect(Unit) { goToLogin() }
+                return@composable
+            }
+            NotificationScreen(
+                notificationViewModel = notificationViewModel,
+                homeViewModel = homeViewModel,
+                onHomeClick = { goTab(Routes.HOME) },
+                onListClick = { goTab(Routes.LIST) },
+                onReminderSettingsClick = { navController.navigate(Routes.REMINDER_SETTINGS) }
+            )
+        }
+        composable(Routes.REMINDER_SETTINGS) {
+            ReminderSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(
+            route = Routes.DETAIL,
+            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            if (authManager.currentUser == null) {
+                LaunchedEffect(Unit) { goToLogin() }
+                return@composable
+            }
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+            DetailScreen(
+                taskId = taskId,
+                viewModel = homeViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
         composable(Routes.PROFILE) {
             if (authManager.currentUser == null) {
                 LaunchedEffect(Unit) { goToLogin() }
                 return@composable
             }
-
-            val homeViewModel: HomeViewModel = viewModel()
-            val todos by homeViewModel.state.collectAsStateWithLifecycle()
-
+            val state by homeViewModel.state.collectAsStateWithLifecycle()
 
             ProfileScreen(
                 authManager = authManager,
-                tasks = todos.tasks,
+                tasks = state.tasks,
                 onBack = { navController.popBackStack() },
                 onLoggedOut = { goToLogin() }
             )

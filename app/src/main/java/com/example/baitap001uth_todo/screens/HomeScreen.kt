@@ -55,7 +55,10 @@ private val Soft = Color(0xFFF3F5FC)
 fun HomeScreen(
     viewModel: HomeViewModel,
     userName: String,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onListClick: () -> Unit,
+    onTaskClick: (String) -> Unit,
+    onNotificationsClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks = state.tasks
@@ -73,7 +76,15 @@ fun HomeScreen(
 
     Scaffold(
         containerColor = Color.White,
-        bottomBar = { HomeBottomBar(onAddClick = { showAdd = true })  }
+        bottomBar = {
+            AppBottomBar(
+                selected = BottomTab.HOME,
+                onHomeClick = {},
+                onListClick = onListClick,
+                onAddClick = { showAdd = true } ,
+                onNotificationsClick = onNotificationsClick
+            )
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -152,7 +163,7 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth().padding(32.dp)
                     )
                 }
-                else -> items(tasks, key = { it.id }) { task -> TaskItem(task) }
+                else -> items(tasks, key = { it.id }) { task -> TaskItem(task) { onTaskClick(task.id) } }
             }
         }
     }
@@ -247,16 +258,16 @@ private fun CategoryCard(icon: ImageVector, title: String, remaining: Int, modif
 }
 
 @Composable
-private fun TaskItem(task: Task) {
+private fun TaskItem(task: Task, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(Soft)
+            .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Đã xong: vòng tròn xanh có dấu tích. Chưa xong: vòng tròn trắng
         Box(
             modifier = Modifier
                 .size(24.dp)
@@ -293,39 +304,6 @@ private fun TaskItem(task: Task) {
     }
 }
 
-@Composable
-private fun HomeBottomBar(onAddClick: () -> Unit) {
-    NavigationBar(containerColor = Color.White) {
-        NavigationBarItem(
-            selected = true, onClick = {},
-            icon = { Icon(Icons.Default.Home, null) }, label = { Text("Trang chủ", fontSize = 10.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Blue, selectedTextColor = Blue, indicatorColor = Color.Transparent)
-        )
-        NavigationBarItem(
-            selected = false, onClick = {},
-            icon = { Icon(Icons.Default.List, null) }, label = { Text("Danh sách", fontSize = 10.sp) }
-        )
-        NavigationBarItem(
-            selected = false, onClick = onAddClick,
-            icon = {
-                Box(
-                    modifier = Modifier.size(44.dp).clip(CircleShape).background(Blue),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Default.Add, null, tint = Color.White) }
-            },
-            colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent)
-        )
-        NavigationBarItem(
-            selected = false, onClick = {},
-            icon = { Icon(Icons.Default.Notifications, null) }, label = { Text("Thông báo", fontSize = 10.sp) }
-        )
-        NavigationBarItem(
-            selected = false, onClick = {},
-            icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Cài đặt", fontSize = 10.sp) }
-        )
-    }
-}
 @Composable
 private fun StatsRow(total: Int, done: Int, pending: Int, percent: Int) {
     Row(

@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.baitap001uth_todo.model.Task
 import com.example.baitap001uth_todo.model.TaskRequest
 import java.time.Instant
 import java.time.LocalDate
@@ -20,15 +21,16 @@ import java.time.format.DateTimeFormatter
 fun AddTaskDialog(
     isSaving: Boolean,
     onDismiss: () -> Unit,
-    onSave: (TaskRequest) -> Unit
+    onSave: (TaskRequest) -> Unit,
+    initial: Task? = null
 ) {
-    var title by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("study") }       // "study" hoặc "life"
-    var priority by remember { mutableStateOf("medium") }      // "low" / "medium" / "high"
-    var date by remember { mutableStateOf(LocalDate.now().toString()) }
-    var time by remember { mutableStateOf("08:00") }
-    var done by remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf(initial?.title ?: "") }
+    var note by remember { mutableStateOf(initial?.note ?: "") }
+    var category by remember { mutableStateOf(initial?.category ?: "study") }
+    var priority by remember { mutableStateOf(initial?.priority ?: "medium") }
+    var date by remember { mutableStateOf(initial?.date?.takeIf { it.isNotBlank() } ?: LocalDate.now().toString()) }
+    var time by remember { mutableStateOf(initial?.time?.takeIf { it.isNotBlank() } ?: "08:00") }
+    var done by remember { mutableStateOf(initial?.done ?: false) }
     var titleError by remember { mutableStateOf(false) }
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -40,7 +42,9 @@ fun AddTaskDialog(
 
     AlertDialog(
         onDismissRequest = { if (!isSaving) onDismiss() },
-        title = { Text("Thêm việc mới", fontWeight = FontWeight.Bold) },
+        title = {
+            Text(if (initial == null) "Thêm việc mới" else "Sửa công việc", fontWeight = FontWeight.Bold)
+        },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
@@ -101,13 +105,16 @@ fun AddTaskDialog(
                 enabled = !isSaving,
                 onClick = {
                     if (title.isBlank()) {
-                        titleError = true          // thiếu tên -> báo lỗi, không gửi API
+                        titleError = true
                     } else {
                         onSave(
                             TaskRequest(
                                 title = title.trim(), note = note.trim(),
                                 category = category, date = date, time = time,
-                                priority = priority, remind = false, done = done
+                                priority = priority,
+                                remind = initial?.remind ?: false,
+                                done = done,
+                                subtasks = initial?.subtasks ?: emptyList()
                             )
                         )
                     }
@@ -117,7 +124,6 @@ fun AddTaskDialog(
         dismissButton = { TextButton(onClick = onDismiss, enabled = !isSaving) { Text("Huỷ") } }
     )
 
-    // ===== Chọn NGÀY =====
     if (showDatePicker) {
         val initialMillis = runCatching {
             LocalDate.parse(date).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
@@ -137,7 +143,6 @@ fun AddTaskDialog(
         ) { DatePicker(state = pickerState) }
     }
 
-    // ===== Chọn GIỜ =====
     if (showTimePicker) {
         val pickerState = rememberTimePickerState(
             initialHour = time.substringBefore(":").toIntOrNull() ?: 8,
