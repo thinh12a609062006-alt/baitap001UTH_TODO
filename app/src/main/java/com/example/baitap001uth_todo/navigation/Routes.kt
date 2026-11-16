@@ -9,6 +9,7 @@ object Routes {
     const val EMAIL = "email_login"
     const val PHONE = "phone_login"
     const val LIST = "list"
+    const val ADD = "add_task"
     const val DETAIL = "detail/{taskId}"
     const val NOTIFICATIONS = "notifications"
     const val REMINDER_SETTINGS = "reminder_settings"

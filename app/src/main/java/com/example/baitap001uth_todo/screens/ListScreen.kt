@@ -43,7 +43,8 @@ fun ListScreen(
     viewModel: HomeViewModel,
     onHomeClick: () -> Unit,
     onTaskClick: (String) -> Unit,
-    onNotificationsClick: () -> Unit
+    onNotificationsClick: () -> Unit,
+    onAddTaskClick: () -> Unit
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -65,7 +66,7 @@ fun ListScreen(
                 selected = BottomTab.LIST,
                 onHomeClick = onHomeClick,
                 onListClick = {},
-                onAddClick = { showAdd = true }
+                onAddClick = onAddTaskClick
                 ,onNotificationsClick = onNotificationsClick,
             )
         }

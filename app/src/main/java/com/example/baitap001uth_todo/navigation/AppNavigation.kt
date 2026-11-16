@@ -27,6 +27,8 @@ import com.example.baitap001uth_todo.screens.DetailScreen
 import com.example.baitap001uth_todo.screens.NotificationScreen
 import com.example.baitap001uth_todo.screens.ReminderSettingsScreen
 import com.example.baitap001uth_todo.viewmodel.NotificationViewModel
+import com.example.baitap001uth_todo.screens.AddTaskScreen
+import com.example.baitap001uth_todo.viewmodel.AddTaskViewModel
 
 @Composable
 fun AppNavigation() {
@@ -55,6 +57,9 @@ fun AppNavigation() {
             popUpTo(Routes.HOME) { inclusive = false }
             launchSingleTop = true
         }
+    }
+    val goAdd = {
+        navController.navigate(Routes.ADD) { launchSingleTop = true }
     }
 
     NavHost(
@@ -151,7 +156,8 @@ fun AppNavigation() {
                 onProfileClick = { navController.navigate(Routes.PROFILE) },
                 onListClick = { goTab(Routes.LIST) },
                 onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
-                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) }
+                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) },
+                onAddTaskClick = goAdd
             )
         }
 
@@ -164,7 +170,20 @@ fun AppNavigation() {
                 viewModel = homeViewModel,
                 onHomeClick = { goTab(Routes.HOME) },
                 onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
-                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) }
+                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) },
+                onAddTaskClick = goAdd
+            )
+        }
+        composable(Routes.ADD) {
+            if (authManager.currentUser == null) {
+                LaunchedEffect(Unit) { goToLogin() }
+                return@composable
+            }
+            val addViewModel: AddTaskViewModel = viewModel()
+            AddTaskScreen(
+                addViewModel = addViewModel,
+                homeViewModel = homeViewModel,
+                onClose = { navController.popBackStack() }
             )
         }
         composable(Routes.NOTIFICATIONS) {
@@ -177,7 +196,8 @@ fun AppNavigation() {
                 homeViewModel = homeViewModel,
                 onHomeClick = { goTab(Routes.HOME) },
                 onListClick = { goTab(Routes.LIST) },
-                onReminderSettingsClick = { navController.navigate(Routes.REMINDER_SETTINGS) }
+                onReminderSettingsClick = { navController.navigate(Routes.REMINDER_SETTINGS) },
+                onAddTaskClick = goAdd,
             )
         }
         composable(Routes.REMINDER_SETTINGS) {

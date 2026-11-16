@@ -58,7 +58,8 @@ fun HomeScreen(
     onProfileClick: () -> Unit,
     onListClick: () -> Unit,
     onTaskClick: (String) -> Unit,
-    onNotificationsClick: () -> Unit
+    onNotificationsClick: () -> Unit,
+    onAddTaskClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks = state.tasks
@@ -81,7 +82,7 @@ fun HomeScreen(
                 selected = BottomTab.HOME,
                 onHomeClick = {},
                 onListClick = onListClick,
-                onAddClick = { showAdd = true } ,
+                onAddClick = onAddTaskClick,
                 onNotificationsClick = onNotificationsClick
             )
         }

@@ -24,13 +24,12 @@ class NotificationViewModel : ViewModel() {
 
     private var timerJob: Job? = null
 
-    /** Dựng danh sách từ các việc thật, rồi sau 10 giây đưa danh sách về rỗng. */
     fun start(tasks: List<Task>) {
         timerJob?.cancel()
         _items.value = buildNotifications(tasks, LocalDateTime.now())
         timerJob = viewModelScope.launch {
-            delay(10_000)               // 10 giây
-            _items.value = emptyList()  // màn hình hiện Empty View
+            delay(10_000)
+            _items.value = emptyList()
         }
     }
 
@@ -45,8 +44,6 @@ class NotificationViewModel : ViewModel() {
 
         val pending = tasks.filter { !it.done }.mapNotNull { t -> dueOf(t)?.let { t to it } }
         val result = mutableListOf<AppNotification>()
-
-        // 1. Sắp đến hạn: trong 24 giờ tới
         pending.filter { (_, due) -> due >= now && due <= now.plusHours(24) }
             .sortedBy { it.second }
             .take(2)
@@ -58,8 +55,6 @@ class NotificationViewModel : ViewModel() {
                     timeLabel = clock
                 )
             }
-
-        // 2. Đã quá hạn
         pending.filter { (_, due) -> due < now }
             .sortedByDescending { it.second }
             .take(2)
@@ -70,8 +65,6 @@ class NotificationViewModel : ViewModel() {
                     timeLabel = due.format(DateTimeFormatter.ofPattern("HH:mm"))
                 )
             }
-
-        // 3. Làm tốt lắm!
         val doneToday = tasks.count { it.done && it.date == today.toString() }
         val doneAll = tasks.count { it.done }
         if (doneAll > 0) {
@@ -83,8 +76,6 @@ class NotificationViewModel : ViewModel() {
                 timeLabel = clock, unread = false
             )
         }
-
-        // 4. Nhắc việc: từ 24 giờ đến 7 ngày tới
         pending.filter { (_, due) -> due > now.plusHours(24) && due <= now.plusDays(7) }
             .sortedBy { it.second }
             .take(2)

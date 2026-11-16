@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.AccessAlarm
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Warning
 
+
 private val Blue = Color(0xFF2F5BEA)
 private val Red = Color(0xFFE5484D)
 private val Green = Color(0xFF1E9E5A)
@@ -44,7 +45,8 @@ fun NotificationScreen(
     homeViewModel: HomeViewModel,
     onHomeClick: () -> Unit,
     onListClick: () -> Unit,
-    onReminderSettingsClick: () -> Unit
+    onReminderSettingsClick: () -> Unit,
+    onAddTaskClick: () -> Unit
 ) {
     val context = LocalContext.current
     val homeState by homeViewModel.state.collectAsStateWithLifecycle()
@@ -63,7 +65,7 @@ fun NotificationScreen(
                 onHomeClick = onHomeClick,
                 onListClick = onListClick,
                 onNotificationsClick = {},
-                onAddClick = { showAdd = true }
+                onAddClick = onAddTaskClick
             )
         }
     ) { padding ->
@@ -90,7 +92,7 @@ fun NotificationScreen(
             if (items.isEmpty()) {
                 EmptyView(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    onAddClick = { showAdd = true },
+                    onAddClick = onAddTaskClick,
                     onSettingsClick = onReminderSettingsClick
                 )
             } else {
@@ -138,10 +140,9 @@ fun NotificationScreen(
 private fun NotificationRow(n: AppNotification) {
     val (icon, color) = when (n.type) {
         NotificationType.DUE_SOON -> Icons.Outlined.AccessAlarm to Blue
+        NotificationType.REMINDER -> Icons.Outlined.AccessAlarm to Blue
         NotificationType.OVERDUE -> Icons.Outlined.Warning to Red
         NotificationType.GOOD_JOB -> Icons.Outlined.Check to Green
-        NotificationType.REMINDER -> Icons.Outlined.AccessAlarm to Blue
-
     }
     Row(
         modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -184,7 +185,6 @@ private fun EmptyView(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Chuông có dấu tích xanh
         Box(modifier = Modifier.size(110.dp), contentAlignment = Alignment.Center) {
             Box(
                 modifier = Modifier.size(96.dp).clip(CircleShape).background(Blue.copy(alpha = 0.10f)),
