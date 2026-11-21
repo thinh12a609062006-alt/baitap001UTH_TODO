@@ -9,7 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-enum class BottomTab { HOME, LIST, NOTIFICATIONS }
+enum class BottomTab { HOME, LIST, NOTIFICATIONS, SETTINGS }
 
 
 @Composable
@@ -32,16 +32,17 @@ fun AppBottomBar(
     onHomeClick: () -> Unit,
     onListClick: () -> Unit,
     onNotificationsClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onAddClick: () -> Unit
 ) {
-    val blue = Color(0xFF2F5BEA)
+    val blue = Blue
     val tabColors = NavigationBarItemDefaults.colors(
         selectedIconColor = blue,
         selectedTextColor = blue,
         indicatorColor = Color.Transparent
     )
 
-    NavigationBar(containerColor = Color.White) {
+    NavigationBar(containerColor = Panel) {
         NavigationBarItem(
             selected = selected == BottomTab.HOME, onClick = onHomeClick,
             icon = { Icon(Icons.Default.Home, null) },
@@ -71,9 +72,10 @@ fun AppBottomBar(
             colors = tabColors
         )
         NavigationBarItem(
-            selected = false, onClick = {},
-            icon = { Icon(Icons.Default.Settings, null) },
-            label = { Text("Cài đặt", fontSize = 10.sp) }
+            selected = selected == BottomTab.SETTINGS, onClick = onSettingsClick,
+            icon = { Icon(Icons.Default.Tune, null) },
+            label = { Text("Cài đặt", fontSize = 10.sp) },
+            colors = tabColors
         )
     }
 }

@@ -42,29 +42,24 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 
-// Màu xanh chủ đạo của app (các màn sau sẽ dùng lại)
-val UthBlue = Color(0xFF2F5BEA)
+val UthBlue: Color
+    @Composable get() = Blue
 
 @Composable
 fun SplashScreen(
     appInfo: AppInfo,
     onFinished: () -> Unit
 ) {
-    // started = false lúc đầu, đổi thành true thì thanh tiến trình bắt đầu chạy
     var started by remember { mutableStateOf(false) }
-
-    // progress tự chạy mượt từ 0f đến 1f trong 2 giây
     val progress by animateFloatAsState(
         targetValue = if (started) 1f else 0f,
         animationSpec = tween(durationMillis = 2000),
         label = "splashProgress"
     )
-
-    // Chạy một lần khi màn hình xuất hiện
     LaunchedEffect(Unit) {
         started = true
-        delay(2300)      // đợi 2,3 giây
-        onFinished()     // báo cho bên ngoài: "Splash xong rồi"
+        delay(2300)
+        onFinished()
     }
 
     Box(
@@ -72,7 +67,6 @@ fun SplashScreen(
             .fillMaxSize()
             .background(UthBlue)
     ) {
-        // Phần giữa: logo + tên + khẩu hiệu
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -81,7 +75,7 @@ fun SplashScreen(
                 modifier = Modifier
                     .size(88.dp)
                     .clip(RoundedCornerShape(22.dp))
-                    .background(Color.White),
+                    .background(Panel),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -109,8 +103,6 @@ fun SplashScreen(
                 fontSize = 12.sp
             )
         }
-
-        // Phần đáy: thanh tiến trình + phiên bản
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -136,19 +128,14 @@ fun SplashScreen(
 @Composable
 fun UthLogo() {
     val lightBlue = Color(0xFFA9B8F5)
-
-    // Ô trắng bo góc
     Box(
         modifier = Modifier
             .size(88.dp)
             .clip(RoundedCornerShape(22.dp))
-            .background(Color.White),
+            .background(Panel),
         contentAlignment = Alignment.Center
     ) {
-        // Hai dòng xếp dọc
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-            // Dòng 1: vòng tròn xanh có dấu tick + thanh xanh đậm
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -175,8 +162,6 @@ fun UthLogo() {
                         .background(UthBlue)
                 )
             }
-
-            // Dòng 2: vòng tròn rỗng + thanh xanh nhạt
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)

@@ -50,11 +50,11 @@ fun PhoneLoginScreen(authManager: AuthManager, onBack: () -> Unit, onLoginSucces
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color.White).systemBarsPadding().padding(24.dp)
+        modifier = Modifier.fillMaxSize().background(Panel).systemBarsPadding().padding(24.dp)
     ) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại") }
         Spacer(Modifier.height(16.dp))
-        Text("Đăng nhập bằng số điện thoại", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B1F3B))
+        Text("Đăng nhập bằng số điện thoại", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink)
         Spacer(Modifier.height(24.dp))
 
         if (verificationId == null) {
@@ -85,7 +85,7 @@ fun PhoneLoginScreen(authManager: AuthManager, onBack: () -> Unit, onLoginSucces
                 enabled = !loading && phone.length >= 9,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F5BEA))
+                colors = ButtonDefaults.buttonColors(containerColor = Blue)
             ) {
                 if (loading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                 else Text("Gửi mã")
@@ -107,13 +107,13 @@ fun PhoneLoginScreen(authManager: AuthManager, onBack: () -> Unit, onLoginSucces
                 enabled = !loading && code.length == 6,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F5BEA))
+                colors = ButtonDefaults.buttonColors(containerColor = Blue)
             ) {
                 if (loading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                 else Text("Xác nhận")
             }
             TextButton(onClick = { verificationId = null; code = "" }, modifier = Modifier.fillMaxWidth()) {
-                Text("Đổi số điện thoại", color = Color(0xFF2F5BEA))
+                Text("Đổi số điện thoại", color = Blue)
             }
         }
     }

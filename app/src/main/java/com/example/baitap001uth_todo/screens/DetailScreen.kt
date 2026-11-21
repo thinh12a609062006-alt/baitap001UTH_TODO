@@ -35,11 +35,8 @@ import com.example.baitap001uth_todo.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-private val Blue = Color(0xFF2F5BEA)
 private val Orange = Color(0xFFF59E0B)
 private val Red = Color(0xFFE5484D)
-private val Ink = Color(0xFF1B1F3B)
-private val Soft = Color(0xFFF3F5FC)
 
 private data class SubEdit(val index: Int, val text: String)
 
@@ -72,7 +69,7 @@ fun DetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Panel)
             .systemBarsPadding()
     ) {
         Row(
@@ -131,7 +128,7 @@ fun DetailScreen(
                     Spacer(Modifier.height(16.dp))
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Soft)) {
                         InfoRow(Icons.Default.DateRange, "Hạn chót", dueLabel(task.date, task.time))
-                        HorizontalDivider(color = Color.White)
+                        HorizontalDivider(color = Bg)
                         InfoRow(Icons.Default.Notifications, "Nhắc nhở",
                             if (task.remind) "Trước 15 phút" else "Không nhắc")
                     }
@@ -175,7 +172,7 @@ fun DetailScreen(
                                         "Đã xoá việc nhỏ")
                                 }
                             )
-                            HorizontalDivider(color = Color.White)
+                            HorizontalDivider(color = Bg)
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth().clickable { subEdit = SubEdit(-1, "") }.padding(14.dp),
@@ -319,7 +316,7 @@ private fun SubtaskRow(sub: Subtask, onToggle: () -> Unit, onEdit: () -> Unit, o
             modifier = Modifier
                 .size(22.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(if (sub.done) Blue else Color.White)
+                .background(if (sub.done) Blue else Panel)
                 .clickable { onToggle() },
             contentAlignment = Alignment.Center
         ) {

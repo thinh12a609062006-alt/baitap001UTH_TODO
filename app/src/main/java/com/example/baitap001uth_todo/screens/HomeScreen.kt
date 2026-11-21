@@ -46,10 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 
-private val Blue = Color(0xFF2F5BEA)
 private val Orange = Color(0xFFF59E0B)
-private val Ink = Color(0xFF1B1F3B)
-private val Soft = Color(0xFFF3F5FC)
 
 @Composable
 fun HomeScreen(
@@ -59,7 +56,8 @@ fun HomeScreen(
     onListClick: () -> Unit,
     onTaskClick: (String) -> Unit,
     onNotificationsClick: () -> Unit,
-    onAddTaskClick: () -> Unit
+    onAddTaskClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks = state.tasks
@@ -76,14 +74,15 @@ fun HomeScreen(
     val dateText = "${dayName.replaceFirstChar { it.uppercase() }}, ${today.dayOfMonth} tháng ${today.monthValue}"
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = Panel,
         bottomBar = {
             AppBottomBar(
                 selected = BottomTab.HOME,
                 onHomeClick = {},
                 onListClick = onListClick,
                 onAddClick = onAddTaskClick,
-                onNotificationsClick = onNotificationsClick
+                onNotificationsClick = onNotificationsClick,
+                onSettingsClick = onSettingsClick,
             )
         }
     ) { padding ->
@@ -249,7 +248,7 @@ private fun CategoryCard(icon: ImageVector, title: String, remaining: Int, modif
         modifier = modifier.clip(RoundedCornerShape(16.dp)).background(Soft).padding(14.dp)
     ) {
         Box(
-            modifier = Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Color.White),
+            modifier = Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Panel),
             contentAlignment = Alignment.Center
         ) { Icon(icon, null, tint = Blue, modifier = Modifier.size(18.dp)) }
         Spacer(Modifier.height(10.dp))
@@ -273,7 +272,7 @@ private fun TaskItem(task: Task, onClick: () -> Unit) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(if (task.done) Blue else Color.White),
+                .background(if (task.done) Blue else Panel),
             contentAlignment = Alignment.Center
         ) {
             if (task.done) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(14.dp))

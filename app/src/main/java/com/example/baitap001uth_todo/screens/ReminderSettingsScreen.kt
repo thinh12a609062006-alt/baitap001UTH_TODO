@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderSettingsScreen(onBack: () -> Unit) {
-    val blue = Color(0xFF2F5BEA)
-    val ink = Color(0xFF1B1F3B)
+    val blue = Blue
+    val ink = Ink
     var enabled by rememberSaveable { mutableStateOf(true) }
     var overdueAlert by rememberSaveable { mutableStateOf(true) }
     var leadMinutes by rememberSaveable { mutableIntStateOf(15) }
@@ -29,7 +29,7 @@ fun ReminderSettingsScreen(onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F8FC))
+            .background(Bg)
             .systemBarsPadding()
             .padding(horizontal = 20.dp, vertical = 14.dp)
     ) {
@@ -47,7 +47,7 @@ fun ReminderSettingsScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
 
         Column(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White).padding(16.dp)
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Panel).padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Bật nhắc việc", fontSize = 15.sp, color = ink, modifier = Modifier.weight(1f))

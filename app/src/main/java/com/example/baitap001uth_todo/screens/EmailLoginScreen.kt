@@ -39,12 +39,12 @@ fun EmailLoginScreen(authManager: AuthManager, onBack: () -> Unit, onLoginSucces
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color.White).systemBarsPadding().padding(24.dp)
+        modifier = Modifier.fillMaxSize().background(Panel).systemBarsPadding().padding(24.dp)
     ) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại") }
         Spacer(Modifier.height(16.dp))
         Text(if (isRegister) "Tạo tài khoản" else "Đăng nhập bằng Email",
-            fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B1F3B))
+            fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Ink)
         Spacer(Modifier.height(24.dp))
 
         OutlinedTextField(
@@ -74,14 +74,14 @@ fun EmailLoginScreen(authManager: AuthManager, onBack: () -> Unit, onLoginSucces
             enabled = !loading && email.isNotBlank() && password.length >= 6,
             modifier = Modifier.fillMaxWidth().height(52.dp),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F5BEA))
+            colors = ButtonDefaults.buttonColors(containerColor = Blue)
         ) {
             if (loading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
             else Text(if (isRegister) "Đăng ký" else "Đăng nhập")
         }
 
         TextButton(onClick = { isRegister = !isRegister }, modifier = Modifier.fillMaxWidth()) {
-            Text(if (isRegister) "Đã có tài khoản? Đăng nhập" else "Chưa có tài khoản? Đăng ký", color = Color(0xFF2F5BEA))
+            Text(if (isRegister) "Đã có tài khoản? Đăng nhập" else "Chưa có tài khoản? Đăng ký", color = Blue)
         }
     }
 }

@@ -36,7 +36,7 @@ fun OnboardingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Panel)
             .systemBarsPadding()
             .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
@@ -64,7 +64,7 @@ fun OnboardingScreen(
             text = page.title,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF1B1F3B)
+            color = Ink
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text(
@@ -191,7 +191,7 @@ private fun TaskRow(done: Boolean, barWidth: Dp) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White)
+            .background(Panel)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -246,7 +246,7 @@ private fun CategoryCard(label: String, color: Color) {
         modifier = Modifier
             .width(220.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White)
+            .background(Panel)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -278,7 +278,7 @@ private fun ReminderIllustration() {
             modifier = Modifier
                 .size(88.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color.White),
+                .background(Panel),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -292,10 +292,10 @@ private fun ReminderIllustration() {
         Text(
             text = "Nộp bài tập lúc 19:00",
             fontSize = 12.sp,
-            color = Color(0xFF1B1F3B),
+            color = Ink,
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .background(Color.White)
+                .background(Panel)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }

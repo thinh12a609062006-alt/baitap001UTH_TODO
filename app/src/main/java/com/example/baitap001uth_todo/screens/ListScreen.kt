@@ -31,11 +31,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.compose.runtime.saveable.rememberSaveable
 
-private val Blue = Color(0xFF2F5BEA)
 private val Orange = Color(0xFFF59E0B)
 private val Red = Color(0xFFE5484D)
-private val Ink = Color(0xFF1B1F3B)
-private val Soft = Color(0xFFF3F5FC)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +41,8 @@ fun ListScreen(
     onHomeClick: () -> Unit,
     onTaskClick: (String) -> Unit,
     onNotificationsClick: () -> Unit,
-    onAddTaskClick: () -> Unit
+    onAddTaskClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -60,7 +58,7 @@ fun ListScreen(
     val finished = visible.filter { it.done }
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = Panel,
         bottomBar = {
             AppBottomBar(
                 selected = BottomTab.LIST,
@@ -68,6 +66,7 @@ fun ListScreen(
                 onListClick = {},
                 onAddClick = onAddTaskClick
                 ,onNotificationsClick = onNotificationsClick,
+                onSettingsClick = onSettingsClick,
             )
         }
     ) { padding ->
@@ -186,7 +185,7 @@ private fun FilterPill(text: String, selected: Boolean, onClick: () -> Unit) {
         text,
         fontSize = 13.sp,
         fontWeight = FontWeight.Medium,
-        color = if (selected) Color.White else Ink,
+        color = if (selected) Bg else Ink,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(if (selected) Ink else Soft)
@@ -217,7 +216,7 @@ private fun ListTaskItem(task: Task, onClick: () -> Unit, onToggle: () -> Unit) 
             modifier = Modifier
                 .size(26.dp)
                 .clip(CircleShape)
-                .background(if (task.done) Blue else Color.White)
+                .background(if (task.done) Blue else Panel)
                 .clickable { onToggle() },
             contentAlignment = Alignment.Center
         ) {

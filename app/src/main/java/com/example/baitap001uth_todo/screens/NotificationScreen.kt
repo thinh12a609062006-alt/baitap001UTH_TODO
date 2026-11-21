@@ -34,10 +34,8 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Warning
 
 
-private val Blue = Color(0xFF2F5BEA)
 private val Red = Color(0xFFE5484D)
 private val Green = Color(0xFF1E9E5A)
-private val Ink = Color(0xFF1B1F3B)
 
 @Composable
 fun NotificationScreen(
@@ -46,7 +44,8 @@ fun NotificationScreen(
     onHomeClick: () -> Unit,
     onListClick: () -> Unit,
     onReminderSettingsClick: () -> Unit,
-    onAddTaskClick: () -> Unit
+    onAddTaskClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val context = LocalContext.current
     val homeState by homeViewModel.state.collectAsStateWithLifecycle()
@@ -58,14 +57,15 @@ fun NotificationScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF7F8FC),
+        containerColor = Bg,
         bottomBar = {
             AppBottomBar(
                 selected = BottomTab.NOTIFICATIONS,
                 onHomeClick = onHomeClick,
                 onListClick = onListClick,
                 onNotificationsClick = {},
-                onAddClick = onAddTaskClick
+                onAddClick = onAddTaskClick,
+                onSettingsClick = onSettingsClick,
             )
         }
     ) { padding ->
@@ -105,11 +105,11 @@ fun NotificationScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
+                            .background(Panel)
                     ) {
                         items.forEachIndexed { index, item ->
                             NotificationRow(item)
-                            if (index < items.lastIndex) HorizontalDivider(color = Color(0xFFF1F3F9))
+                            if (index < items.lastIndex) HorizontalDivider(color = Line)
                         }
                     }
                 }
@@ -191,7 +191,7 @@ private fun EmptyView(
                 contentAlignment = Alignment.Center
             ) {
                 Box(
-                    modifier = Modifier.size(72.dp).clip(CircleShape).background(Color.White),
+                    modifier = Modifier.size(72.dp).clip(CircleShape).background(Panel),
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Default.Notifications, null, tint = Blue, modifier = Modifier.size(34.dp)) }
             }

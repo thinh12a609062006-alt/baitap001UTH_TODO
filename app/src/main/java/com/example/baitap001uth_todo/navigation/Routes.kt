@@ -10,6 +10,7 @@ object Routes {
     const val PHONE = "phone_login"
     const val LIST = "list"
     const val ADD = "add_task"
+    const val SETTINGS = "settings"
     const val DETAIL = "detail/{taskId}"
     const val NOTIFICATIONS = "notifications"
     const val REMINDER_SETTINGS = "reminder_settings"

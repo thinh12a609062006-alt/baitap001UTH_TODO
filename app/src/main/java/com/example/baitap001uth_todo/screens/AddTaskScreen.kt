@@ -27,11 +27,6 @@ import com.example.baitap001uth_todo.viewmodel.DateChoice
 import com.example.baitap001uth_todo.viewmodel.HomeViewModel
 import java.time.format.DateTimeFormatter
 
-private val Blue = Color(0xFF2F5BEA)
-private val Ink = Color(0xFF1B1F3B)
-private val Bg = Color(0xFFF7F8FC)
-private val Line = Color(0xFFE3E6F0)
-private val Soft = Color(0xFFF3F5FC)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +79,7 @@ fun AddTaskScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
         ) {
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Panel)) {
                 Text("Tên công việc", fontSize = 12.sp, color = Color.Gray,
                     modifier = Modifier.padding(start = 16.dp, top = 12.dp))
                 TextField(
@@ -125,7 +120,7 @@ fun AddTaskScreen(
             )
 
             Spacer(Modifier.height(14.dp))
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Panel)) {
                 Row(
                     modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true }.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -160,14 +155,14 @@ fun AddTaskScreen(
             Label("Mức ưu tiên")
             Row(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFEDEFF5)).padding(4.dp)
+                    .background(Line).padding(4.dp)
             ) {
                 listOf("low" to "Thấp", "medium" to "Vừa", "high" to "Cao").forEach { (key, text) ->
                     val selected = form.priority == key
                     Box(
                         modifier = Modifier.weight(1f)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(if (selected) Color.White else Color.Transparent)
+                            .background(if (selected) Panel else Color.Transparent)
                             .clickable { addViewModel.onPriority(key) }
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center
@@ -227,7 +222,7 @@ private fun ChoiceBox(text: String, selected: Boolean, modifier: Modifier = Modi
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(if (selected) Blue.copy(alpha = 0.10f) else Color.White)
+            .background(if (selected) Blue.copy(alpha = 0.10f) else Panel)
             .border(1.5.dp, if (selected) Blue else Line, RoundedCornerShape(14.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center

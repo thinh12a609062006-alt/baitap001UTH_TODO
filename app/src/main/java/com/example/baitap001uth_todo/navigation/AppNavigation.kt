@@ -29,6 +29,9 @@ import com.example.baitap001uth_todo.screens.ReminderSettingsScreen
 import com.example.baitap001uth_todo.viewmodel.NotificationViewModel
 import com.example.baitap001uth_todo.screens.AddTaskScreen
 import com.example.baitap001uth_todo.viewmodel.AddTaskViewModel
+import com.example.baitap001uth_todo.screens.SettingsScreen
+import com.example.baitap001uth_todo.viewmodel.SettingsViewModel
+import com.example.baitap001uth_todo.screens.UthAppTheme
 
 @Composable
 fun AppNavigation() {
@@ -38,6 +41,8 @@ fun AppNavigation() {
     val repository = remember { OnboardingRepository() }
 
     val homeViewModel: HomeViewModel = viewModel()
+    val settingsViewModel: SettingsViewModel = viewModel()
+    val settings by settingsViewModel.state.collectAsStateWithLifecycle()
     val notificationViewModel: NotificationViewModel = viewModel()
 
     val appInfo = AppInfo(
@@ -61,176 +66,200 @@ fun AppNavigation() {
     val goAdd = {
         navController.navigate(Routes.ADD) { launchSingleTop = true }
     }
+    UthAppTheme(settings) {
+        NavHost(
+            navController = navController,
+            startDestination = Routes.SPLASH
+        ) {
+            composable(Routes.SPLASH) {
+                SplashScreen(
+                    appInfo = appInfo,
+                    onFinished = {
+                        navController.navigate(Routes.onboarding(1)) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    }
+                )
+            }
 
-    NavHost(
-        navController = navController,
-        startDestination = Routes.SPLASH
-    ) {
-        composable(Routes.SPLASH) {
-            SplashScreen(
-                appInfo = appInfo,
-                onFinished = {
-                    navController.navigate(Routes.onboarding(1)) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
+            composable(
+                route = Routes.ONBOARDING,
+                arguments = listOf(navArgument("pageId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val pageId = backStackEntry.arguments?.getInt("pageId") ?: 1
+                val page = repository.getPage(pageId - 1)
+                val total = repository.getTotalPages()
+
+                val goNext = {
+                    val target = if (authManager.currentUser != null) Routes.HOME else Routes.LOGIN
+                    navController.navigate(target) {
+                        popUpTo(navController.graph.id) { inclusive = true }
                     }
                 }
-            )
-        }
 
-        composable(
-            route = Routes.ONBOARDING,
-            arguments = listOf(navArgument("pageId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val pageId = backStackEntry.arguments?.getInt("pageId") ?: 1
-            val page = repository.getPage(pageId - 1)
-            val total = repository.getTotalPages()
-
-            val goNext = {
-                val target = if (authManager.currentUser != null) Routes.HOME else Routes.LOGIN
-                navController.navigate(target) {
-                    popUpTo(navController.graph.id) { inclusive = true }
-                }
+                OnboardingScreen(
+                    page = page,
+                    totalPages = total,
+                    onNext = {
+                        if (page.isLast(total)) goNext()
+                        else navController.navigate(Routes.onboarding(pageId + 1))
+                    },
+                    onSkip = { goNext() }
+                )
             }
 
-            OnboardingScreen(
-                page = page,
-                totalPages = total,
-                onNext = {
-                    if (page.isLast(total)) goNext()
-                    else navController.navigate(Routes.onboarding(pageId + 1))
-                },
-                onSkip = { goNext() }
-            )
-        }
-
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                authManager = authManager,
-                onEmailClick = { navController.navigate(Routes.EMAIL) },
-                onPhoneClick = { navController.navigate(Routes.PHONE) },
-                onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+            composable(Routes.LOGIN) {
+                LoginScreen(
+                    authManager = authManager,
+                    onEmailClick = { navController.navigate(Routes.EMAIL) },
+                    onPhoneClick = { navController.navigate(Routes.PHONE) },
+                    onLoginSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Routes.EMAIL) {
-            EmailLoginScreen(
-                authManager = authManager,
-                onBack = { navController.popBackStack() },
-                onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+            composable(Routes.EMAIL) {
+                EmailLoginScreen(
+                    authManager = authManager,
+                    onBack = { navController.popBackStack() },
+                    onLoginSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Routes.PHONE) {
-            PhoneLoginScreen(
-                authManager = authManager,
-                onBack = { navController.popBackStack() },
-                onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+            composable(Routes.PHONE) {
+                PhoneLoginScreen(
+                    authManager = authManager,
+                    onBack = { navController.popBackStack() },
+                    onLoginSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     }
+                )
+            }
+
+            composable(Routes.HOME) {
+                val user = authManager.currentUser
+                if (user == null) {
+                    LaunchedEffect(Unit) { goToLogin() }
+                    return@composable
                 }
-            )
-        }
+                val name = user.displayName?.takeIf { it.isNotBlank() }
+                    ?: user.email?.substringBefore("@")
+                    ?: ""
 
-        composable(Routes.HOME) {
-            val user = authManager.currentUser
-            if (user == null) {
-                LaunchedEffect(Unit) { goToLogin() }
-                return@composable
+                HomeScreen(
+                    viewModel = homeViewModel,
+                    userName = name,
+                    onProfileClick = { navController.navigate(Routes.PROFILE) },
+                    onListClick = { goTab(Routes.LIST) },
+                    onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
+                    onNotificationsClick = { goTab(Routes.NOTIFICATIONS) },
+                    onAddTaskClick = goAdd,
+                    onSettingsClick = { goTab(Routes.SETTINGS) }
+                )
             }
-            val name = user.displayName?.takeIf { it.isNotBlank() }
-                ?: user.email?.substringBefore("@")
-                ?: ""
 
-            HomeScreen(
-                viewModel = homeViewModel,
-                userName = name,
-                onProfileClick = { navController.navigate(Routes.PROFILE) },
-                onListClick = { goTab(Routes.LIST) },
-                onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
-                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) },
-                onAddTaskClick = goAdd
-            )
-        }
+            composable(Routes.LIST) {
+                if (authManager.currentUser == null) {
+                    LaunchedEffect(Unit) { goToLogin() }
+                    return@composable
+                }
+                ListScreen(
+                    viewModel = homeViewModel,
+                    onHomeClick = { goTab(Routes.HOME) },
+                    onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
+                    onNotificationsClick = { goTab(Routes.NOTIFICATIONS) },
+                    onAddTaskClick = goAdd,
+                    onSettingsClick = { goTab(Routes.SETTINGS) }
+                )
+            }
+            composable(Routes.ADD) {
+                if (authManager.currentUser == null) {
+                    LaunchedEffect(Unit) { goToLogin() }
+                    return@composable
+                }
+                val addViewModel: AddTaskViewModel = viewModel()
+                AddTaskScreen(
+                    addViewModel = addViewModel,
+                    homeViewModel = homeViewModel,
+                    onClose = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.NOTIFICATIONS) {
+                if (authManager.currentUser == null) {
+                    LaunchedEffect(Unit) { goToLogin() }
+                    return@composable
+                }
+                NotificationScreen(
+                    notificationViewModel = notificationViewModel,
+                    homeViewModel = homeViewModel,
+                    onHomeClick = { goTab(Routes.HOME) },
+                    onListClick = { goTab(Routes.LIST) },
+                    onReminderSettingsClick = { navController.navigate(Routes.REMINDER_SETTINGS) },
+                    onAddTaskClick = goAdd,
+                    onSettingsClick = { goTab(Routes.SETTINGS) }
+                )
+            }
+            composable(Routes.SETTINGS) {
+                val user = authManager.currentUser
+                if (user == null) {
+                    LaunchedEffect(Unit) { goToLogin() }
+                    return@composable
+                }
+                val name = user.displayName?.takeIf { it.isNotBlank() }
+                    ?: user.email?.substringBefore("@")
+                    ?: ""
 
-        composable(Routes.LIST) {
-            if (authManager.currentUser == null) {
-                LaunchedEffect(Unit) { goToLogin() }
-                return@composable
+                SettingsScreen(
+                    viewModel = settingsViewModel,
+                    userName = name,
+                    onHomeClick = { goTab(Routes.HOME) },
+                    onListClick = { goTab(Routes.LIST) },
+                    onNotificationsClick = { goTab(Routes.NOTIFICATIONS) },
+                    onAddTaskClick = goAdd,
+                    onProfileClick = { navController.navigate(Routes.PROFILE) },
+                )
             }
-            ListScreen(
-                viewModel = homeViewModel,
-                onHomeClick = { goTab(Routes.HOME) },
-                onTaskClick = { id -> navController.navigate(Routes.detail(id)) },
-                onNotificationsClick = { goTab(Routes.NOTIFICATIONS) },
-                onAddTaskClick = goAdd
-            )
-        }
-        composable(Routes.ADD) {
-            if (authManager.currentUser == null) {
-                LaunchedEffect(Unit) { goToLogin() }
-                return@composable
+            composable(Routes.REMINDER_SETTINGS) {
+                ReminderSettingsScreen(onBack = { navController.popBackStack() })
             }
-            val addViewModel: AddTaskViewModel = viewModel()
-            AddTaskScreen(
-                addViewModel = addViewModel,
-                homeViewModel = homeViewModel,
-                onClose = { navController.popBackStack() }
-            )
-        }
-        composable(Routes.NOTIFICATIONS) {
-            if (authManager.currentUser == null) {
-                LaunchedEffect(Unit) { goToLogin() }
-                return@composable
+            composable(
+                route = Routes.DETAIL,
+                arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                if (authManager.currentUser == null) {
+                    LaunchedEffect(Unit) { goToLogin() }
+                    return@composable
+                }
+                val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                DetailScreen(
+                    taskId = taskId,
+                    viewModel = homeViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
-            NotificationScreen(
-                notificationViewModel = notificationViewModel,
-                homeViewModel = homeViewModel,
-                onHomeClick = { goTab(Routes.HOME) },
-                onListClick = { goTab(Routes.LIST) },
-                onReminderSettingsClick = { navController.navigate(Routes.REMINDER_SETTINGS) },
-                onAddTaskClick = goAdd,
-            )
-        }
-        composable(Routes.REMINDER_SETTINGS) {
-            ReminderSettingsScreen(onBack = { navController.popBackStack() })
-        }
-        composable(
-            route = Routes.DETAIL,
-            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            if (authManager.currentUser == null) {
-                LaunchedEffect(Unit) { goToLogin() }
-                return@composable
-            }
-            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-            DetailScreen(
-                taskId = taskId,
-                viewModel = homeViewModel,
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Routes.PROFILE) {
-            if (authManager.currentUser == null) {
-                LaunchedEffect(Unit) { goToLogin() }
-                return@composable
-            }
-            val state by homeViewModel.state.collectAsStateWithLifecycle()
+            composable(Routes.PROFILE) {
+                if (authManager.currentUser == null) {
+                    LaunchedEffect(Unit) { goToLogin() }
+                    return@composable
+                }
+                val state by homeViewModel.state.collectAsStateWithLifecycle()
 
-            ProfileScreen(
-                authManager = authManager,
-                tasks = state.tasks,
-                onBack = { navController.popBackStack() },
-                onLoggedOut = { goToLogin() }
-            )
+                ProfileScreen(
+                    authManager = authManager,
+                    tasks = state.tasks,
+                    onBack = { navController.popBackStack() },
+                    onLoggedOut = { goToLogin() }
+                )
+            }
         }
     }
 }

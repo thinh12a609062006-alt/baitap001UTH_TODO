@@ -58,18 +58,18 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Panel)
             .systemBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
         Spacer(Modifier.height(40.dp))
         Box(
-            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(Color(0xFF2F5BEA)),
+            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(Blue),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.Default.Checklist, contentDescription = null, tint = Color.White) }
         Spacer(Modifier.height(20.dp))
-        Text("Chào mừng đến với\nUTH Todo", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B1F3B))
+        Text("Chào mừng đến với\nUTH Todo", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Ink)
         Spacer(Modifier.height(8.dp))
         Text("Đăng nhập để lưu công việc và đồng bộ trên mọi thiết bị của bạn.", fontSize = 13.sp, color = Color.Gray)
         Spacer(Modifier.height(40.dp))
@@ -98,7 +98,7 @@ fun LoginScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Dùng thử không cần tài khoản", color = Color(0xFF2F5BEA), fontWeight = FontWeight.Medium)
+                Text("Dùng thử không cần tài khoản", color = Blue, fontWeight = FontWeight.Medium)
             }
         }
 
@@ -119,7 +119,7 @@ private fun LoginButton(text: String, icon: @Composable () -> Unit, onClick: () 
     ) {
         icon()
         Spacer(Modifier.width(12.dp))
-        Text(text, color = Color(0xFF1B1F3B), fontWeight = FontWeight.Medium)
+        Text(text, color = Ink, fontWeight = FontWeight.Medium)
     }
     Spacer(Modifier.height(10.dp))
 }

@@ -25,8 +25,6 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 
-private val Blue = Color(0xFF2F5BEA)
-private val Ink = Color(0xFF1B1F3B)
 
 @Composable
 fun ProfileScreen(
@@ -59,7 +57,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F8FC))
+            .background(Bg)
             .systemBarsPadding()
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -124,7 +122,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color.White)
+                .background(Panel)
                 .clickable { showConfirm = true }
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center,
@@ -173,7 +171,7 @@ fun ProfileScreen(
 @Composable
 private fun StatCard(value: String, label: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(14.dp)).background(Color.White).padding(14.dp)
+        modifier = modifier.clip(RoundedCornerShape(14.dp)).background(Panel).padding(14.dp)
     ) {
         Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Ink)
         Text(label, fontSize = 11.sp, color = Color.Gray)
@@ -194,7 +192,7 @@ private fun WeekChart(tasks: List<Task>) {
     val maxValue = maxOf(values.max(), 1)
 
     Column(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White).padding(16.dp)
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Panel).padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Tuần này", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Ink,
